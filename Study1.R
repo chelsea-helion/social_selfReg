@@ -105,10 +105,11 @@ plot_model(glm_plot, type = "pred", terms = c("TypeNameShown"))
 
 ## time allocation
 ## fit mixed effects model
+regData_s1$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "1") 
 mlm1 <- lmer(formula = DifferenceTime ~ TypeNameShown + (1 | SANPID),
              data = regData_s1)
 summary(mlm1)
-regData$TypeNameShown <- relevel(regData$TypeNameShown, ref = "1") ## repeat with new reference
+regData_s1$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "2") ## repeat with new reference
 
 
 mlm2 <- lmer(formula = DifferenceTime ~ (1 | SANPID),
@@ -117,81 +118,6 @@ summary(mlm2)
 
 anova(mlm1, mlm2)
 confint(mlm1, parm = "beta_", method = "Wald")
-
-## binary choice x relational obligation
-## fit mixed effects model
-regData_s1$TypeNameShown <- as.factor(regData_s1$TypeNameShown)
-## 1 = Finance, 2 = Friend, 3 = Celebrity; Videogame = 1, Finance Task = 0
-glm3 <-
-  glmer(
-    formula = ResponseFavorCoded ~ TypeNameShown * relational_Obl_c + (1 | SANPID),
-    data = regData_s1,
-    family = "binomial"
-  )
-summary(glm3)
-regData$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "2") ## repeat with new reference
-
-glm4 <- glmer(formula = ResponseFavorCoded ~ TypeNameShown + (1 | SANPID),
-              data = regData_s1,
-              family = "binomial")
-summary(glm4)
-
-## model comparison
-anova(glm3, glm4)
-confint(glm3, parm = "beta_", method = "Wald")
-simple_slopes(
-  glm3,
-  levels = NULL,
-  confint = FALSE,
-  ci.width = .95,
-  confint.method = c("Wald")
-)
-
-
-
-## time allocation x relational obligation
-## fit mixed effects model
-mlm3 <- lmer(formula = DifferenceTime ~ TypeNameShown * relational_Obl + (1 | SANPID),
-             data = regData_s1)
-summary(mlm3)
-regData_s1$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "1") ## repeat with new reference
-
-
-mlm4 <- lmer(formula = DifferenceTime ~ TypeNameShown + (1 | SANPID),
-             data = regData_s1)
-summary(mlm4)
-
-anova(mlm3, mlm4)
-confint(mlm3, parm = "beta_", method = "Wald")
-simple_slopes(
-  mlm3,
-  levels = NULL,
-  confint = FALSE,
-  ci.width = .95,
-  confint.method = c("Wald")
-)
-
-
-## plot effects for time allocation
-ee <- Effect(c("TypeNameShown", "relational_Obl"), mlm3)
-
-theme_set(theme_bw())
-ggplot(data = as.data.frame(ee),
-       aes(
-         y = fit,
-         x = relational_Obl,
-         color = TypeNameShown,
-         fill = TypeNameShown
-       )) +
-  geom_line() +
-  geom_ribbon(alpha = 0.1,
-              aes(ymin = lower, ymax = upper),
-              linetype = .5) +
-  scale_color_manual(values = c("#0000CC", "#660099", "#CC0000")) +
-  scale_fill_manual(values = c("#0000CC", "#660099", "#CC0000")) +
-  ylab("Minutes allocated to Financial Literacy Task relative to Videogame") +
-  xlab("Reported feelings of relationship obligation") +
-  theme(legend.position = "none")
 
 ## relational assessment measures for summary table
 relDat_s1 %>%
@@ -228,3 +154,104 @@ relDat_s1 %>%
     sdSR = sd(S_RO),
     sdCR = sd(C_RO)
   )
+
+
+## binary choice x relational obligation
+## fit mixed effects model
+## 1 = Finance, 2 = Friend, 3 = Celebrity; Videogame = 1, Finance Task = 0
+regData_s1$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "1") 
+glm3 <-
+  glmer(
+    formula = ResponseFavorCoded ~ TypeNameShown * relational_Obl_c + (1 | SANPID),
+    data = regData_s1,
+    family = "binomial"
+  )
+summary(glm3)
+regData$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "2") ## repeat with new reference
+
+glm4 <- glmer(formula = ResponseFavorCoded ~ TypeNameShown + (1 | SANPID),
+              data = regData_s1,
+              family = "binomial")
+summary(glm4)
+
+## model comparison
+anova(glm3, glm4)
+confint(glm3, parm = "beta_", method = "Wald")
+simple_slopes(
+  glm3,
+  levels = NULL,
+  confint = FALSE,
+  ci.width = .95,
+  confint.method = c("Wald")
+)
+
+## plot data
+glm3_plot <-
+  glmer(
+    formula = ResponseFavorCoded ~ TypeNameShown * relational_Obl + (1 | SANPID),
+    data = regData_s1,
+    family = "binomial"
+  )
+df <- ggpredict(glm3_plot, terms = c("relational_Obl", "TypeNameShown"))
+theme_set(theme_bw())
+ggplot(data = as.data.frame(df),
+       aes(
+         y = predicted,
+         x = x,
+         color = group,
+         fill = group
+       )) +
+  geom_line() +
+  geom_ribbon(alpha = 0.1,
+              aes(ymin = conf.low, ymax = conf.high),
+              linetype = .5) +
+  scale_color_manual(values = c("#0000CC", "#660099", "#CC0000")) +
+  scale_fill_manual(values = c("#0000CC", "#660099", "#CC0000")) +
+  ylab("Probability of selecting the Financial Literacy Task") +
+  xlab("Reported feelings of relationship obligation") +
+  theme(legend.position = "none")
+
+## time allocation x relational obligation
+## fit mixed effects model
+mlm3 <- lmer(formula = DifferenceTime ~ TypeNameShown * relational_Obl_c + (1 | SANPID),
+             data = regData_s1)
+summary(mlm3)
+regData_s1$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "1") ## repeat with new reference
+
+
+mlm4 <- lmer(formula = DifferenceTime ~ TypeNameShown + (1 | SANPID),
+             data = regData_s1)
+summary(mlm4)
+
+anova(mlm3, mlm4)
+confint(mlm3, parm = "beta_", method = "Wald")
+simple_slopes(
+  mlm3,
+  levels = NULL,
+  confint = FALSE,
+  ci.width = .95,
+  confint.method = c("Wald")
+)
+
+## plot effects for time allocation
+mlm3_plot <- lmer(formula = DifferenceTime ~ TypeNameShown * relational_Obl + (1 | SANPID),
+                  data = regData_s1)
+df2 <- ggpredict(mlm3_plot, terms = c("relational_Obl", "TypeNameShown"))
+theme_set(theme_bw())
+
+ggplot(data = as.data.frame(df2),
+       aes(
+         y = predicted,
+         x = x,
+         color = group,
+         fill = group
+       )) +
+  geom_line() +
+  geom_ribbon(alpha = 0.1,
+              aes(ymin = conf.low, ymax = conf.high),
+              linetype = .5) +
+  scale_color_manual(values = c("#0000CC", "#660099", "#CC0000")) +
+  scale_fill_manual(values = c("#0000CC", "#660099", "#CC0000")) +
+  ylab("Minutes allocated to Financial Literacy Task relative to Videogame") +
+  xlab("Reported feelings of relationship obligation") +
+  theme(legend.position = "none")
