@@ -48,6 +48,7 @@ sd(singTrial_s3$Age)
 table(singTrial_s3$Gender)
 
 ## create relational obligation variable
+cor.test(regData_s3$MoralObl,regData_s3$LetDownConcern)
 regData_s3$RelationalObl <-
   (regData_s3$MoralObl + regData_s3$LetDownConcern) / 2
 regData_s3$RelationalObl_c <-
@@ -76,10 +77,10 @@ glm2 <- glmer(
 )
 summary(glm2)
 anova(glm1, glm2)
-confint(glm1, parm = "beta_", method = "Wald")
 simple_slopes(glm1)
 
 ## fit mixed effects model (for plotting)
+regData_s3$Condition <- relevel(regData_s3$Condition, ref = "FriendBenefit")
 glm_plot <-
   glmer(
     formula = ResponseFavorCode ~ Condition * RelationalObl + (1 |
@@ -101,17 +102,17 @@ mlm1 <-
 summary(mlm1)
 
 mlm2 <-
-  lmer(formula = DifferenceTime ~ Condition + RelationalObl + (1 |
-                                                                 PID),
+  lmer(formula = DiffTime ~ Condition + RelationalObl + (1 |
+                                                           PID),
        data = regData_s3)
 summary(mlm2)
-anova(mlm1, mlm42)
-confint(mlm1, parm = "beta_", method = "Wald")
+anova(mlm1, mlm2)
 simple_slopes(mlm1)
 
 ## fit mixed effects model (for plotting)
 mlm_plot <-
-  lmer(formula = DiffTime ~ Condition * RelationalObl + (1 | SANPID),
+  lmer(formula = DiffTime ~ Condition * RelationalObl + (1 |
+                                                           SANPID),
        data = regData_s3)
 
 ## plot glmer model
@@ -120,22 +121,44 @@ plot_model(mlm_plot,
            terms = c("RelationalObl", "Condition"))
 
 ## check strength of effects when social desirability is included in the model
+glmSD <-
+  glmer(
+    formula = ResponseFavorCode ~ SocialDesirability + (1 |
+                                                          SANPID),
+    data = regData_s3,
+    family = "binomial"
+  )
+summary(glmSD)
+confint(glmSD, parm = "beta_", method = "Wald")
+
+mlmSD <-
+  lmer(
+    formula = DiffTime ~ SocialDesirability + (1 |
+                                                          SANPID),
+    data = regData_s3
+  )
+summary(mlmSD)
+confint(mlmSD, parm = "beta_", method = "Wald")
+
 glm1_SD <-
   glmer(
     formula = ResponseFavorCode ~ Condition * RelationalObl_c + SocialDesirability + (1 |
-                                                                   SANPID),
+                                                                                        SANPID),
     data = regData_s3,
     family = "binomial"
   )
 summary(glm1_SD)
+confint(glm1_SD, parm = "beta_", method = "Wald")
 
 mlm1_SD <-
   lmer(
     formula = DiffTime ~ Condition * RelationalObl_c + SocialDesirability + (1 |
-                                                                                        SANPID),
+                                                                               SANPID),
     data = regData_s3
   )
 summary(mlm1_SD)
+confint(mlm1_SD, parm = "beta_", method = "Wald")
+
 ## plot glmer model
 plot_model(mlm1_SD,
            type = "pred",
@@ -152,4 +175,3 @@ relGoals <- singTrial_s3 %>%
   )
 t.test(relGoals$meanFB_Finance, relGoals$meanSB_Finance, paired = T)
 t.test(relGoals$meanFB_Social, relGoals$meanSB_Social, paired = T)
-
