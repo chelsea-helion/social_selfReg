@@ -23,6 +23,15 @@ mean(singTrial_s2$Age)
 sd(singTrial_s2$Age)
 table(singTrial_s2$Gender)
 
+## check average number of trials completed
+trials <- regData_s2 %>%
+  select(SANPID) %>%
+  group_by(SANPID) %>%
+  mutate(id = seq_len(n())) %>%
+  summarise(meanID = length(id))
+mean(trials$meanID)
+sd(trials$meanID)
+
 ## check manipulation
 t.test(
   singTrial_s2$VideogameWant,
@@ -39,8 +48,9 @@ singTrial_s2 %>%
 ## look at average trial completion
 ## check average number of trials completed
 trials <- regData_s2 %>%
-  select(SANPID) %>%
+  select(SANPID, ResponseFavorCoded) %>%
   group_by(SANPID) %>%
+  filter(!is.na(ResponseFavorCoded)) %>%
   mutate(id = seq_len(n())) %>%
   summarise(meanID = length(id))
 mean(trials$meanID)
@@ -59,8 +69,8 @@ regData_s2$SelfOther_GoalMotivation_c <-
         scale = F)
 glm1 <-
   glmer(
-    formula = ResponseFavorCoded ~ SelfOther_GoalMotivation * Group + (1 |
-                                                                         SANPID),
+    formula = ResponseFavorCoded ~ SelfOther_GoalMotivation_c * Group + (1 |
+                                                                           SANPID),
     data = regData_s2,
     family = "binomial"
   )
@@ -75,6 +85,7 @@ glm2 <-
   )
 summary(glm2)
 anova(glm1, glm2)
+plot(effect("SelfOther_GoalMotivation_c:Group", glm1), grid = TRUE)
 
 confint(glm1, parm = "beta_", method = "Wald")
 simple_slopes(
@@ -85,10 +96,44 @@ simple_slopes(
   confint.method = c("Wald")
 )
 
+glm1_plot <-
+  glmer(
+    formula = ResponseFavorCoded ~ SelfOther_GoalMotivation * Group + (1 |
+                                                                         SANPID),
+    data = regData_s2,
+    family = "binomial"
+  )
 ## plot glmer model
-plot_model(glm1,
+plot_model(glm1_plot,
            type = "pred",
            terms = c("SelfOther_GoalMotivation", "Group"))
+
+## run moral obligation
+regData_s2$MoralObl_c <-
+  scale(regData_s2$MoralObl,
+        center = T,
+        scale = F)
+
+## binary choice
+glm1_mo <-
+  glmer(
+    formula = ResponseFavorCoded ~ MoralObl_c * Group + (1 |
+                                                           SANPID),
+    data = regData_s2,
+    family = "binomial"
+  )
+summary(glm1_mo)
+
+glm2_mo <-
+  glmer(
+    formula = ResponseFavorCoded ~ MoralObl_c + Group + (1 |
+                                                           SANPID),
+    data = regData_s2,
+    family = "binomial"
+  )
+summary(glm2_mo)
+anova(glm2_mo, glm1_mo)
+simple_slopes(glm1_mo)
 
 ## time allocation
 ## fit mixed effects interaction model -- Social Motivation and Condition
@@ -103,7 +148,7 @@ mlm2 <-
                                                           SANPID), data = regData_s2)
 summary(mlm2)
 
-anova(mlm1, mlm2)
+anova(mlm2, mlm1)
 confint(mlm1, parm = "beta_", method = "Wald")
 simple_slopes(
   mlm1,
@@ -119,6 +164,22 @@ plot_model(mlm_plot,
            type = "pred",
            terms = c("SelfOther_GoalMotivation", "Group"))
 
+
+## time allocation
+mlm1_mo <-
+  lmer(DiffTime ~ MoralObl_c * Group + (1 |
+                                          SANPID), data = regData_s2)
+summary(mlm1_mo)
+
+mlm2_mo <-
+  lmer(DiffTime ~ MoralObl_c + Group + (1 |
+                                          SANPID), data = regData_s2)
+summary(mlm2_mo)
+
+anova(mlm1_mo, mlm2_mo)
+confint(mlm1_mo, parm = "beta_", method = "Wald")
+confint(mlm2_mo, parm = "beta_", method = "Wald")
+
 ## check strength of effects when social desirability is included in the model
 glmSD <-
   glmer(
@@ -130,6 +191,13 @@ glmSD <-
 summary(glmSD)
 confint(glmSD, parm = "beta_", method = "Wald")
 
+mlmSD <-
+  lmer(formula = DiffTime ~ SocialDesirability_Total + (1 |
+                                                          SANPID),
+       data = regData_s2)
+summary(mlmSD)
+confint(mlmSD, parm = "beta_", method = "Wald")
+
 glm1_SD <-
   glmer(
     formula = ResponseFavorCoded ~ SelfOther_GoalMotivation_c * Group + SocialDesirability_Total + (1 |
@@ -138,22 +206,16 @@ glm1_SD <-
     family = "binomial"
   )
 summary(glm1_SD)
+confint(glm1_SD, parm = "beta_", method = "Wald")
 
 mlm1_SD <-
-  lmer(formula = DiffTime ~ SocialDesirability_Total + (1 |
-                                                          SANPID),
-       data = regData_s2)
-summary(mlm1_SD)
-confint(mlm1_SD, parm = "beta_", method = "Wald")
-
-mlm2_SD <-
   lmer(
-    formula = DiffTime ~ SelfOther_GoalMotivation_c * Group + SocialDesirability_Total + (1 |
-                                                                                            SANPID),
+    formula = DiffTime ~ relational_Obl_c * Group + SocialDesirability_Total + (1 |
+                                                                                  SANPID),
     data = regData_s2
   )
-summary(mlm2_SD)
-confint(mlm2_SD, parm = "beta_", method = "Wald")
+summary(mlm1_SD)
+confint(mlm1_SD, parm = "beta_", method = "Wald")
 
 ## Items for Goal Assessment table, per condition
 t.test(VideogameWant ~ Group, data = singTrial_s2)
