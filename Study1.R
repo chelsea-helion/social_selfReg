@@ -10,6 +10,7 @@ library(lme4)
 library(lmerTest)
 library(sjPlot)
 library(corrplot)
+library(ggeffects)
 setwd("/Users/tua37526/Dropbox/SocialSelfReg")
 
 ## load in data

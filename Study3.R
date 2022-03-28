@@ -48,7 +48,7 @@ sd(singTrial_s3$Age)
 table(singTrial_s3$Gender)
 
 ## create relational obligation variable
-cor.test(regData_s3$MoralObl,regData_s3$LetDownConcern)
+cor.test(regData_s3$MoralObl, regData_s3$LetDownConcern)
 regData_s3$RelationalObl <-
   (regData_s3$MoralObl + regData_s3$LetDownConcern) / 2
 regData_s3$RelationalObl_c <-
@@ -80,7 +80,8 @@ anova(glm1, glm2)
 simple_slopes(glm1)
 
 ## fit mixed effects model (for plotting)
-regData_s3$Condition <- relevel(regData_s3$Condition, ref = "FriendBenefit")
+regData_s3$Condition <-
+  relevel(regData_s3$Condition, ref = "FriendBenefit")
 glm_plot <-
   glmer(
     formula = ResponseFavorCode ~ Condition * RelationalObl + (1 |
@@ -132,11 +133,9 @@ summary(glmSD)
 confint(glmSD, parm = "beta_", method = "Wald")
 
 mlmSD <-
-  lmer(
-    formula = DiffTime ~ SocialDesirability + (1 |
-                                                          SANPID),
-    data = regData_s3
-  )
+  lmer(formula = DiffTime ~ SocialDesirability + (1 |
+                                                    SANPID),
+       data = regData_s3)
 summary(mlmSD)
 confint(mlmSD, parm = "beta_", method = "Wald")
 
@@ -173,5 +172,20 @@ relGoals <- singTrial_s3 %>%
     meanSB_Finance = mean(SocialBenefit_FinanceGoalAssociation),
     meanSB_Social = mean(SocialBenefit_SocialGoalAssociation),
   )
+
+relGoals %>%
+  summarise(
+    mean(meanFB_Finance),
+    sd(meanFB_Finance),
+    mean(meanSB_Finance),
+    sd(meanSB_Finance))
 t.test(relGoals$meanFB_Finance, relGoals$meanSB_Finance, paired = T)
+
+relGoals %>%
+  summarise(
+    mean(meanFB_Social),
+    sd(meanFB_Social),
+    mean(meanSB_Social),
+    sd(meanSB_Social))
 t.test(relGoals$meanFB_Social, relGoals$meanSB_Social, paired = T)
+
