@@ -186,6 +186,8 @@ simple_slopes(
   confint.method = c("Wald")
 )
 
+
+
 ## plot data
 glm3_plot <-
   glmer(
@@ -206,8 +208,8 @@ ggplot(data = as.data.frame(df),
   geom_ribbon(alpha = 0.1,
               aes(ymin = conf.low, ymax = conf.high),
               linetype = .5) +
-  scale_color_manual(values = c("#0000CC", "#660099", "#CC0000")) +
-  scale_fill_manual(values = c("#0000CC", "#660099", "#CC0000")) +
+  scale_color_manual(values = c("#F79082", "#2B7DCC", "#F67D1A")) +
+  scale_fill_manual(values = c("#F79082", "#2B7DCC", "#F67D1A")) +
   ylab("Probability of selecting the Financial Literacy Task") +
   xlab("Reported feelings of relationship obligation") +
   theme(legend.position = "none")
