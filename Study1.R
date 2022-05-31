@@ -85,7 +85,7 @@ glm1 <-
     family = "binomial"
   )
 summary(glm1)
-regData_s1$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "2") ## repeat with new reference
+regData_s1$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "3") ## repeat with new reference
 
 glm2 <- glmer(formula = ResponseFavorCoded ~ (1 | SANPID),
               data = regData_s1,
@@ -94,7 +94,10 @@ summary(glm2)
 
 ## model comparison
 anova(glm1, glm2)
-confint(glm1, parm = "beta_", method = "Wald")
+cc <- confint(glm1, parm = "beta_", method = "Wald")
+ctab <- cbind(est=fixef(glm1),cc)
+rtab <- exp(ctab)
+print(rtab,digits=3)
 
 ## plot effects for binary choice
 glm_plot <- glmer(
@@ -160,7 +163,9 @@ relDat_s1 %>%
 ## binary choice x relational obligation
 ## fit mixed effects model
 ## 1 = Finance, 2 = Friend, 3 = Celebrity; Videogame = 1, Finance Task = 0
-regData_s1$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "1") 
+regData_s1$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "1")
+regData_s1$type_name_shown_int <- recode(regData_s1$TypeNameShown, "1" = -1, "2" = 0, "3" = 1)
+regData_s1$inter <- regData_s1$type_name_shown_int * regData_s1$relational_Obl_c
 glm3 <-
   glmer(
     formula = ResponseFavorCoded ~ TypeNameShown * relational_Obl_c + (1 | SANPID),
@@ -168,7 +173,7 @@ glm3 <-
     family = "binomial"
   )
 summary(glm3)
-regData$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "2") ## repeat with new reference
+regData_s1$TypeNameShown <- relevel(regData_s1$TypeNameShown, ref = "2") ## repeat with new reference
 
 glm4 <- glmer(formula = ResponseFavorCoded ~ TypeNameShown + (1 | SANPID),
               data = regData_s1,
@@ -186,7 +191,10 @@ simple_slopes(
   confint.method = c("Wald")
 )
 
-
+cc <- confint(glm3, parm = "beta_", method = "Wald")
+ctab <- cbind(est=fixef(glm3),cc)
+rtab <- exp(ctab)
+print(rtab,digits=3)
 
 ## plot data
 glm3_plot <-

@@ -190,6 +190,10 @@ glmSD <-
   )
 summary(glmSD)
 confint(glmSD, parm = "beta_", method = "Wald")
+cc <- confint(glmSD, parm = "beta_", method = "Wald")
+ctab <- cbind(est=fixef(glmSD),cc)
+rtab <- exp(ctab)
+print(rtab,digits=3)
 
 mlmSD <-
   lmer(formula = DiffTime ~ SocialDesirability_Total + (1 |
@@ -207,6 +211,10 @@ glm1_SD <-
   )
 summary(glm1_SD)
 confint(glm1_SD, parm = "beta_", method = "Wald")
+cc <- confint(glm1_SD, parm = "beta_", method = "Wald")
+ctab <- cbind(est=fixef(glm1_SD),cc)
+rtab <- exp(ctab)
+print(rtab,digits=3)
 
 mlm1_SD <-
   lmer(
